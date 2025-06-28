@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+.env
+coverage/
+```
+
+---
+
+This bundle is ready for `zapier test` and `npm test`. If you wish to add triggers, actions, searches, or authentication, provide a YAML specification or requirements and I will generate the bundle accordingly.
