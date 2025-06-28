@@ -1,0 +1,121 @@
+{
+  "name": "zapier-hello-world",
+  "version": "1.0.0",
+  "description": "Zapier CLI Hello World smoke test bundle",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "zapier",
+    "cli",
+    "hello-world",
+    "smoke-test"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "zapier-platform-core": "^15.5.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
+```
+
+```plaintext
+# File: index.js
+const { version } = require('./package.json');
+
+const helloWorldTrigger = require('./triggers/hello_world');
+
+module.exports = {
+  version,
+  platformVersion: require('zapier-platform-core').version,
+  triggers: {
+    [helloWorldTrigger.key]: helloWorldTrigger
+  }
+};
+```
+
+```plaintext
+# File: triggers/hello_world.js
+module.exports = {
+  key: 'hello_world',
+  noun: 'Hello World',
+  display: {
+    label: 'Manual Hello World',
+    description: 'A simple smoke-test manual trigger that returns "Hello, world!"'
+  },
+  operation: {
+    perform: async (z, bundle) => {
+      return [
+        {
+          id: '1',
+          message: 'Hello, world!'
+        }
+      ];
+    },
+    sample: {
+      id: '1',
+      message: 'Hello, world!'
+    },
+    outputFields: [
+      { key: 'id', label: 'ID' },
+      { key: 'message', label: 'Message' }
+    ]
+  }
+};
+```
+
+```plaintext
+# File: test/triggers/hello_world.test.js
+const zapier = require('zapier-platform-core');
+const app = require('../../index');
+
+describe('hello_world trigger', () => {
+  it('returns "Hello, world!" message', async () => {
+    const bundle = {};
+    const results = await app.triggers.hello_world.operation.perform(zapier, bundle);
+
+    expect(Array.isArray(results)).toBe(true);
+    expect(results.length).toBe(1);
+    expect(results[0]).toHaveProperty('id', '1');
+    expect(results[0]).toHaveProperty('message', 'Hello, world!');
+  });
+
+  it('has correct sample', () => {
+    const sample = app.triggers.hello_world.operation.sample;
+    expect(sample).toHaveProperty('id', '1');
+    expect(sample).toHaveProperty('message', 'Hello, world!');
+  });
+
+  it('has correct output fields', () => {
+    const fields = app.triggers.hello_world.operation.outputFields;
+    expect(fields).toEqual([
+      { key: 'id', label: 'ID' },
+      { key: 'message', label: 'Message' }
+    ]);
+  });
+
+  it('display property is correct', () => {
+    const disp = app.triggers.hello_world.display;
+    expect(disp.label).toMatch(/Manual Hello World/);
+    expect(disp.description).toMatch(/smoke-test/);
+  });
+});
+```
+
+```plaintext
+# File: jest.config.js
+module.exports = {
+  testEnvironment: 'node',
+  testMatch: [
+    "**/test/**/*.test.js"
+  ],
+  collectCoverage: true,
+  collectCoverageFrom: [
+    "triggers/**/*.js",
+    "index.js"
+  ]
+};
