@@ -1,0 +1,27 @@
+{
+  "name": "zapier-hello-world",
+  "version": "1.0.0",
+  "description": "A minimal Zapier CLI app with a Hello World trigger.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "zapier",
+    "cli",
+    "example"
+  ],
+  "author": "Zapier CLI Generator",
+  "license": "MIT",
+  "dependencies": {
+    "zapier-platform-core": "^16.2.6"
+  },
+  "devDependencies": {
+    "jest": "^29.6.0"
+  }
+}
+```
+
+---
+
+####
