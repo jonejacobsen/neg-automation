@@ -1,0 +1,27 @@
+{
+  "name": "zapier-hello-world",
+  "version": "1.0.0",
+  "description": "Zapier CLI Hello World smoke test bundle",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "zapier",
+    "cli",
+    "hello-world",
+    "smoke-test"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "zapier-platform-core": "^15.5.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
+```
+
+```plaintext
+#
