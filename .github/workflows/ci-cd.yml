@@ -1,0 +1,32 @@
+# .github/workflows/ci-cd.yml
+name: ci-cd
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          # If the repo contains a Node project with tests, run them.
+          if [ -f package.json ]; then
+            npm ci
+            npm test
+          else
+            echo "No tests"
+          fi
+
+  deploy:
+    # Only run after the PR is merged and tests (if any) have passed.
+    if: github.event.pull_request.merged == true
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          # Deploy a Zapier bundle when a file named 'zapier.zap' is present.
+          if [ -f zapier.zap ]; then
+            npx zapier push --yes --api-key ${{ secrets.ZAPIER_KEY }}
+          else
+            echo "No Zapier bundle found — nothing to deploy."
+          fi
