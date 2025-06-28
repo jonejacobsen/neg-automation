@@ -1,0 +1,17 @@
+const { version } = require('./package.json');
+const ping = require('./triggers/ping');
+
+module.exports = {
+  version,
+  platformVersion: require('zapier-platform-core').version,
+  triggers: {
+    [ping.key]: ping,
+  },
+  searches: {},
+  creates: {},
+};
+```
+
+---
+
+**
