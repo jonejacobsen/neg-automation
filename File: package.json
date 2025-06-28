@@ -1,7 +1,7 @@
 {
-  "name": "zapier-hello-world",
+  "name": "cleanup-test-01",
   "version": "1.0.0",
-  "description": "Zapier CLI Hello World smoke test bundle",
+  "description": "Zapier CLI app: Testing after branch cleanup",
   "main": "index.js",
   "scripts": {
     "test": "jest"
@@ -9,16 +9,16 @@
   "keywords": [
     "zapier",
     "cli",
-    "hello-world",
-    "smoke-test"
+    "trigger",
+    "manual"
   ],
-  "author": "Your Name",
+  "author": "",
   "license": "MIT",
   "dependencies": {
-    "zapier-platform-core": "^15.5.0"
+    "zapier-platform-core": "^15.5.2"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^29.6.1"
   }
 }
 ```
@@ -26,96 +26,130 @@
 ```plaintext
 # File: index.js
 const { version } = require('./package.json');
-
-const helloWorldTrigger = require('./triggers/hello_world');
+const manualTrigger = require('./triggers/manual_trigger');
 
 module.exports = {
   version,
   platformVersion: require('zapier-platform-core').version,
   triggers: {
-    [helloWorldTrigger.key]: helloWorldTrigger
-  }
+    [manualTrigger.key]: manualTrigger,
+  },
+  // No authentication required
 };
 ```
 
 ```plaintext
-# File: triggers/hello_world.js
+# File: triggers/manual_trigger.js
 module.exports = {
-  key: 'hello_world',
-  noun: 'Hello World',
+  key: 'manual_trigger',
+  noun: 'Test',
   display: {
-    label: 'Manual Hello World',
-    description: 'A simple smoke-test manual trigger that returns "Hello, world!"'
+    label: 'Manual Test Trigger',
+    description: 'A manual trigger for testing after branch cleanup.',
+    important: true,
   },
+
   operation: {
     perform: async (z, bundle) => {
+      // Returns a static test provided object
       return [
         {
-          id: '1',
-          message: 'Hello, world!'
-        }
+          id: 1,
+          message: 'Branch cleanup test succeeded.',
+          timestamp: new Date().toISOString(),
+        },
       ];
     },
+    // No inputFields
     sample: {
-      id: '1',
-      message: 'Hello, world!'
+      id: 1,
+      message: 'Branch cleanup test succeeded.',
+      timestamp: '2024-01-01T00:00:00.000Z'
     },
     outputFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'message', label: 'Message' }
-    ]
-  }
+      { key: 'id', label: 'ID', type: 'integer' },
+      { key: 'message', label: 'Message', type: 'string' },
+      { key: 'timestamp', label: 'Timestamp', type: 'string' },
+    ],
+  },
 };
 ```
 
 ```plaintext
-# File: test/triggers/hello_world.test.js
-const zapier = require('zapier-platform-core');
-const app = require('../../index');
+# File: __tests__/manual_trigger.test.js
+const manualTrigger = require('../triggers/manual_trigger');
 
-describe('hello_world trigger', () => {
-  it('returns "Hello, world!" message', async () => {
-    const bundle = {};
-    const results = await app.triggers.hello_world.operation.perform(zapier, bundle);
-
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBe(1);
-    expect(results[0]).toHaveProperty('id', '1');
-    expect(results[0]).toHaveProperty('message', 'Hello, world!');
+describe('manualTrigger', () => {
+  test('should have correct key and noun', () => {
+    expect(manualTrigger.key).toBe('manual_trigger');
+    expect(manualTrigger.noun).toBe('Test');
   });
 
-  it('has correct sample', () => {
-    const sample = app.triggers.hello_world.operation.sample;
-    expect(sample).toHaveProperty('id', '1');
-    expect(sample).toHaveProperty('message', 'Hello, world!');
+  test('should expose correct display information', () => {
+    expect(manualTrigger.display.label).toBe('Manual Test Trigger');
+    expect(manualTrigger.display.description).toMatch(/manual trigger/i);
+    expect(manualTrigger.display.important).toBe(true);
   });
 
-  it('has correct output fields', () => {
-    const fields = app.triggers.hello_world.operation.outputFields;
-    expect(fields).toEqual([
-      { key: 'id', label: 'ID' },
-      { key: 'message', label: 'Message' }
+  test('should provide correct sample', () => {
+    const sample = manualTrigger.operation.sample;
+    expect(sample).toEqual({
+      id: 1,
+      message: 'Branch cleanup test succeeded.',
+      timestamp: '2024-01-01T00:00:00.000Z'
+    });
+  });
+
+  test('should define correct outputFields', () => {
+    expect(manualTrigger.operation.outputFields).toEqual([
+      { key: 'id', label: 'ID', type: 'integer' },
+      { key: 'message', label: 'Message', type: 'string' },
+      { key: 'timestamp', label: 'Timestamp', type: 'string' },
     ]);
   });
 
-  it('display property is correct', () => {
-    const disp = app.triggers.hello_world.display;
-    expect(disp.label).toMatch(/Manual Hello World/);
-    expect(disp.description).toMatch(/smoke-test/);
+  test('perform should return array with correct structure', async () => {
+    const z = {};
+    const bundle = {};
+    const result = await manualTrigger.operation.perform(z, bundle);
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(1);
+
+    const item = result[0];
+    expect(item).toHaveProperty('id', 1);
+    expect(item).toHaveProperty('message', 'Branch cleanup test succeeded.');
+    expect(item).toHaveProperty('timestamp');
+    // timestamp should be ISO string
+    const d = new Date(item.timestamp);
+    expect(typeof d.toISOString()).toBe('string');
+    // Should be close to "now"
+    const now = Date.now();
+    const ts = Date.parse(item.timestamp);
+    expect(Math.abs(ts - now)).toBeLessThan(1000 * 5); // within 5 seconds
   });
 });
 ```
 
 ```plaintext
-# File: jest.config.js
-module.exports = {
-  testEnvironment: 'node',
-  testMatch: [
-    "**/test/**/*.test.js"
-  ],
-  collectCoverage: true,
-  collectCoverageFrom: [
-    "triggers/**/*.js",
-    "index.js"
-  ]
-};
+# File: __tests__/index.test.js
+jest.mock('../package.json', () => ({
+  version: '1.0.0'
+}));
+
+describe('index exports', () => {
+  const app = require('../index.js');
+  const manualTrigger = require('../triggers/manual_trigger');
+
+  test('should export version', () => {
+    expect(app.version).toBe('1.0.0');
+  });
+
+  test('should export platformVersion', () => {
+    expect(app.platformVersion).toBeDefined();
+    expect(typeof app.platformVersion).toBe('string');
+  });
+
+  test('should register the manual trigger', () => {
+    expect(app.triggers[manualTrigger.key]).toBe(manualTrigger);
+  });
+});

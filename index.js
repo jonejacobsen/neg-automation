@@ -1,13 +1,13 @@
 const { version } = require('./package.json');
-
-const helloWorldTrigger = require('./triggers/hello_world');
+const manualTrigger = require('./triggers/manual_trigger');
 
 module.exports = {
   version,
   platformVersion: require('zapier-platform-core').version,
   triggers: {
-    [helloWorldTrigger.key]: helloWorldTrigger
-  }
+    [manualTrigger.key]: manualTrigger,
+  },
+  // No authentication required
 };
 ```
 
