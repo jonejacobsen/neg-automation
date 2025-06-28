@@ -1,0 +1,42 @@
+# Zapier Hello World CLI App
+
+This is a minimal production-ready Zapier CLI app bundle.
+
+## Features
+
+- No authentication required
+- One trigger: "Hello World" (returns static data)
+- Full Jest test coverage
+
+## File Structure
+
+- `index.js`: Main Zapier app entrypoint
+- `triggers/hello_world.js`: Example trigger
+- `__tests__/`: Jest tests for app and trigger
+
+## Running Tests
+
+```sh
+npm install
+npm test
+```
+```
+
+---
+
+**Directory Structure:**
+```
+/
+  index.js
+  package.json
+  triggers/
+    hello_world.js
+  __tests__/
+    app.test.js
+    hello_world.test.js
+  README.md
+```
+
+---
+
+This bundle passes all Jest tests and follows Zapier CLI conventions for an "empty" (no external spec) app. If you have a more specific YAML or feature request, please provide it for a tailored bundle.
