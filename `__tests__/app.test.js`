@@ -1,0 +1,26 @@
+const app = require('../index');
+
+describe('App structure', () => {
+  it('should export an object', () => {
+    expect(typeof app).toBe('object');
+  });
+
+  it('should have a version and platformVersion', () => {
+    expect(app.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(app.platformVersion).toBeDefined();
+  });
+
+  it('should include the hello_world trigger', () => {
+    expect(app.triggers).toHaveProperty('hello_world');
+    expect(typeof app.triggers.hello_world).toBe('object');
+  });
+
+  it('should have no authentication configuration', () => {
+    expect(app.authentication).toBeUndefined();
+  });
+});
+```
+
+---
+
+####
