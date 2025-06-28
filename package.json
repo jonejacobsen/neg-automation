@@ -1,7 +1,7 @@
 {
-  "name": "zapier-hello-world",
+  "name": "cleanup-test-01",
   "version": "1.0.0",
-  "description": "Zapier CLI Hello World smoke test bundle",
+  "description": "Zapier CLI app: Testing after branch cleanup",
   "main": "index.js",
   "scripts": {
     "test": "jest"
@@ -9,16 +9,16 @@
   "keywords": [
     "zapier",
     "cli",
-    "hello-world",
-    "smoke-test"
+    "trigger",
+    "manual"
   ],
-  "author": "Your Name",
+  "author": "",
   "license": "MIT",
   "dependencies": {
-    "zapier-platform-core": "^15.5.0"
+    "zapier-platform-core": "^15.5.2"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^29.6.1"
   }
 }
 ```
