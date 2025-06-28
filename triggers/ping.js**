@@ -1,0 +1,24 @@
+module.exports = {
+  key: 'ping',
+  noun: 'Ping',
+  display: {
+    label: 'Ping',
+    description: 'A simple test trigger that returns a static object.'
+  },
+  operation: {
+    perform: async (z, bundle) => {
+      return [
+        {
+          id: 1,
+          message: 'pong',
+          timestamp: new Date().toISOString()
+        }
+      ];
+    }
+  }
+};
+```
+
+---
+
+**
