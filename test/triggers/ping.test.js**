@@ -1,0 +1,25 @@
+const zapier = require('zapier-platform-core');
+const App = require('../../index');
+
+const appTester = zapier.createAppTester(App);
+
+describe('Ping Trigger', () => {
+  test('should return a pong object', async () => {
+    const bundle = {};
+    const results = await appTester(App.triggers.ping.operation.perform, bundle);
+
+    expect(Array.isArray(results)).toBe(true);
+    expect(results).toHaveLength(1);
+
+    const item = results[0];
+    expect(item).toHaveProperty('id', 1);
+    expect(item).toHaveProperty('message', 'pong');
+    expect(item).toHaveProperty('timestamp');
+    expect(new Date(item.timestamp).toString()).not.toBe('Invalid Date');
+  });
+});
+```
+
+---
+
+**
