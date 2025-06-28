@@ -1,0 +1,36 @@
+module.exports = {
+  key: 'hello_world',
+  noun: 'Hello',
+  display: {
+    label: 'New Hello World',
+    description: 'Trigger that returns a Hello World message.'
+  },
+  operation: {
+    type: 'polling',
+    perform: async (z, bundle) => {
+      // Returns a sample array of objects
+      return [
+        {
+          id: 1,
+          message: 'Hello, World!',
+          time: (new Date()).toISOString()
+        }
+      ];
+    },
+    sample: {
+      id: 1,
+      message: 'Hello, World!',
+      time: '2024-01-01T00:00:00.000Z'
+    },
+    outputFields: [
+      { key: 'id', label: 'ID', type: 'integer' },
+      { key: 'message', label: 'Message' },
+      { key: 'time', label: 'Time' }
+    ]
+  }
+};
+```
+
+---
+
+####
