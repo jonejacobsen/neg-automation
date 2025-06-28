@@ -1,0 +1,25 @@
+{
+  "name": "zapier-empty-cli-bundle",
+  "version": "1.0.0",
+  "description": "A minimal Zapier CLI app example.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "zapier-platform-core": "^15.5.0"
+  },
+  "devDependencies": {
+    "jest": "^29.6.1"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
+```
+
+---
+
+**
