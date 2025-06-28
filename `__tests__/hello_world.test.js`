@@ -1,0 +1,35 @@
+const helloWorldTrigger = require('../triggers/hello_world');
+
+describe('Hello World Trigger', () => {
+  it('should be defined and well-formed', () => {
+    expect(helloWorldTrigger).toMatchObject({
+      key: 'hello_world',
+      noun: 'Hello',
+      display: expect.any(Object),
+      operation: expect.any(Object),
+    });
+  });
+
+  it('should have perform, sample, and outputFields', () => {
+    expect(typeof helloWorldTrigger.operation.perform).toBe('function');
+    expect(helloWorldTrigger.operation).toHaveProperty('sample');
+    expect(Array.isArray(helloWorldTrigger.operation.outputFields)).toBe(true);
+  });
+
+  it('perform should return a static result', async () => {
+    const z = {};
+    const bundle = {};
+    const results = await helloWorldTrigger.operation.perform(z, bundle);
+    expect(Array.isArray(results)).toBe(true);
+    expect(results[0]).toMatchObject({
+      id: 1,
+      message: 'Hello, World!'
+    });
+    expect(results[0]).toHaveProperty('time');
+  });
+});
+```
+
+---
+
+####
