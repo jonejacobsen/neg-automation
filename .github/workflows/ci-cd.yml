@@ -1,32 +1,60 @@
 # .github/workflows/ci-cd.yml
 name: ci-cd
-on: [pull_request]
+
+on:
+  pull_request:
 
 jobs:
+  # ──────────────────────────
+  # 1.  Test job
+  # ──────────────────────────
   test:
     runs-on: ubuntu-latest
     steps:
+      # 1-A  Check out the PR branch
       - uses: actions/checkout@v4
-      - run: |
+
+      # 1-B  Install deps (lock-file-aware) and run tests
+      - name: Install dependencies & run tests
+        run: |
           # If the repo contains a Node project with tests, run them.
           if [ -f package.json ]; then
-            npm ci
-            npm test
+            if [ -f package-lock.json ]; then
+              echo "🔒  Lock-file found – running npm ci"
+              npm ci
+            else
+              echo "⚠️  No lock-file – falling back to npm install"
+              npm install --no-audit --no-fund
+            fi
+
+            if [ -f package.json ] && jq -e '.scripts.test' package.json > /dev/null; then
+              echo "🧪  Running test script"
+              npm test
+            else
+              echo "ℹ️  No test script defined – skipping tests"
+            fi
           else
-            echo "No tests"
+            echo "ℹ️  No package.json – skipping Node tests"
           fi
 
+  # ──────────────────────────
+  # 2.  Deploy job
+  # ──────────────────────────
   deploy:
-    # Only run after the PR is merged and tests (if any) have passed.
+    # Run only **after** PR is merged and tests (if any) have passed
     if: github.event.pull_request.merged == true
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          # Deploy a Zapier bundle when a file named 'zapier.zap' is present.
+
+      - name: Deploy Zapier bundle (if present)
+        env:
+          ZAPIER_KEY: ${{ secrets.ZAPIER_KEY }}
+        run: |
           if [ -f zapier.zap ]; then
-            npx zapier push --yes --api-key ${{ secrets.ZAPIER_KEY }}
+            echo "🚀  Deploying zapier.zap"
+            npx zapier push --yes --api-key "$ZAPIER_KEY"
           else
-            echo "No Zapier bundle found — nothing to deploy."
+            echo "ℹ️  No Zapier bundle found – nothing to deploy."
           fi
