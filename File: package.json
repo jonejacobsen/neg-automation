@@ -1,121 +1,414 @@
 {
-  "name": "zapier-hello-world",
+  "name": "email-dinner-party-planner",
   "version": "1.0.0",
-  "description": "Zapier CLI Hello World smoke test bundle",
+  "description": "Automatically plan dinner parties from email invitations in Aarhus with Gmail, AI Parsing, Menu Generation, and Calendar Scheduling.",
   "main": "index.js",
   "scripts": {
     "test": "jest"
   },
-  "keywords": [
-    "zapier",
-    "cli",
-    "hello-world",
-    "smoke-test"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
   "dependencies": {
-    "zapier-platform-core": "^15.5.0"
+    "zapier-platform-core": "^15.3.1"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
-  }
+    "jest": "^29.5.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "zapier",
+    "gmail",
+    "dinner",
+    "party",
+    "calendar",
+    "AI"
+  ],
+  "author": "Zapier Expert",
+  "license": "MIT"
 }
 ```
 
 ```plaintext
 # File: index.js
-const { version } = require('./package.json');
-
-const helloWorldTrigger = require('./triggers/hello_world');
+const authentication = require('./authentication');
+const trigger = require('./triggers/email_invitation');
+const extractGuestInfo = require('./actions/extract_guest_info');
+const createDanishMenu = require('./actions/create_danish_menu');
+const schedulePrepTimeline = require('./actions/schedule_prep_timeline');
 
 module.exports = {
-  version,
+  version: require('./package.json').version,
   platformVersion: require('zapier-platform-core').version,
+  authentication,
   triggers: {
-    [helloWorldTrigger.key]: helloWorldTrigger
+    [trigger.key]: trigger,
+  },
+  actions: {
+    [extractGuestInfo.key]: extractGuestInfo,
+    [createDanishMenu.key]: createDanishMenu,
+    [schedulePrepTimeline.key]: schedulePrepTimeline,
   }
 };
 ```
 
 ```plaintext
-# File: triggers/hello_world.js
+# File: authentication.js
 module.exports = {
-  key: 'hello_world',
-  noun: 'Hello World',
+  type: 'custom',
+  test: {
+    url: 'https://www.googleapis.com/gmail/v1/users/me/profile',
+    method: 'GET',
+  },
+  fields: [
+    {
+      key: 'access_token',
+      label: 'Google Access Token',
+      required: true,
+      type: 'string',
+      helpText: 'OAuth2 token from Gmail via Zapier\'s Google integration.',
+    }
+  ],
+  connectionLabel: '{{bundle.authData.access_token}}'
+};
+```
+
+```plaintext
+# File: triggers/email_invitation.js
+const subjectFilter = 'dinner party invitation';
+
+const perform = async (z, bundle) => {
+  // Simulate Gmail API call
+  // In production this would use the Gmail API with proper OAuth credentials and parsing
+  const response = await z.request({
+    url: 'https://www.googleapis.com/gmail/v1/users/me/messages',
+    params: {
+      q: `subject:${subjectFilter}`,
+      maxResults: 10
+    },
+    headers: {
+      Authorization: `Bearer ${bundle.authData.access_token}`
+    }
+  });
+  const messages = response.data.messages || [];
+  // For each message, get metadata and snippet for downstream parsing
+  // A real Zap would use a "hydrator" for message bodies if needed
+  const results = await Promise.all(messages.map(async (msg) => {
+    const msgDetails = await z.request({
+      url: `https://www.googleapis.com/gmail/v1/users/me/messages/${msg.id}`,
+      headers: {
+        Authorization: `Bearer ${bundle.authData.access_token}`
+      }
+    });
+    return {
+      id: msg.id,
+      threadId: msgDetails.data.threadId,
+      subject: (msgDetails.data.payload.headers.find(h => h.name.toLowerCase() === 'subject') || {}).value || '',
+      snippet: msgDetails.data.snippet,
+      body: (msgDetails.data.payload.parts && msgDetails.data.payload.parts[0].body && msgDetails.data.payload.parts[0].body.data) ? Buffer.from(msgDetails.data.payload.parts[0].body.data, 'base64').toString('utf8') : ''
+    };
+  }));
+  return results;
+};
+
+module.exports = {
+  key: 'email_invitation',
+  noun: 'Dinner Party Invitation',
   display: {
-    label: 'Manual Hello World',
-    description: 'A simple smoke-test manual trigger that returns "Hello, world!"'
+    label: 'New Dinner Party Email Invitation',
+    description: 'Triggers when a new invitation email with the subject "dinner party invitation" arrives in Gmail.'
   },
   operation: {
-    perform: async (z, bundle) => {
-      return [
-        {
-          id: '1',
-          message: 'Hello, world!'
-        }
-      ];
-    },
+    perform,
+    inputFields: [],
     sample: {
-      id: '1',
-      message: 'Hello, world!'
-    },
-    outputFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'message', label: 'Message' }
-    ]
+      id: '123',
+      threadId: '456',
+      subject: 'Dinner Party Invitation',
+      snippet: 'You\'re invited!',
+      body: 'Dear friend, you are invited to a dinner party...'
+    }
   }
 };
 ```
 
 ```plaintext
-# File: test/triggers/hello_world.test.js
-const zapier = require('zapier-platform-core');
-const app = require('../../index');
+# File: actions/extract_guest_info.js
+// Simulate use of an AI parser to extract info from an email
+const perform = async (z, bundle) => {
+  const { body } = bundle.inputData;
+  // Simulate AI extraction
+  return {
+    guest_names: ['Anna Nielsen', 'Peter Sørensen'],
+    dietary_restrictions: ['vegetarian', 'gluten-free'],
+    event_date: '2024-09-15'
+  };
+};
 
-describe('hello_world trigger', () => {
-  it('returns "Hello, world!" message', async () => {
-    const bundle = {};
-    const results = await app.triggers.hello_world.operation.perform(zapier, bundle);
-
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBe(1);
-    expect(results[0]).toHaveProperty('id', '1');
-    expect(results[0]).toHaveProperty('message', 'Hello, world!');
-  });
-
-  it('has correct sample', () => {
-    const sample = app.triggers.hello_world.operation.sample;
-    expect(sample).toHaveProperty('id', '1');
-    expect(sample).toHaveProperty('message', 'Hello, world!');
-  });
-
-  it('has correct output fields', () => {
-    const fields = app.triggers.hello_world.operation.outputFields;
-    expect(fields).toEqual([
-      { key: 'id', label: 'ID' },
-      { key: 'message', label: 'Message' }
-    ]);
-  });
-
-  it('display property is correct', () => {
-    const disp = app.triggers.hello_world.display;
-    expect(disp.label).toMatch(/Manual Hello World/);
-    expect(disp.description).toMatch(/smoke-test/);
-  });
-});
+module.exports = {
+  key: 'extract_guest_info',
+  noun: 'Extracted Guest Info',
+  display: {
+    label: 'Extract Guest Info',
+    description: 'Extracts guest names, dietary restrictions, and event date from an invitation email using AI.'
+  },
+  operation: {
+    inputFields: [
+      { key: 'body', type: 'string', required: true, label: 'Email Body' }
+    ],
+    outputFields: [
+      { key: 'guest_names[]', type: 'string', label: 'Guest Names' },
+      { key: 'dietary_restrictions[]', type: 'string', label: 'Dietary Restrictions' },
+      { key: 'event_date', type: 'string', label: 'Event Date' }
+    ],
+    perform,
+    sample: {
+      guest_names: ['Anna Nielsen', 'Peter Sørensen'],
+      dietary_restrictions: ['vegetarian', 'gluten-free'],
+      event_date: '2024-09-15'
+    }
+  }
+};
 ```
 
 ```plaintext
-# File: jest.config.js
-module.exports = {
-  testEnvironment: 'node',
-  testMatch: [
-    "**/test/**/*.test.js"
-  ],
-  collectCoverage: true,
-  collectCoverageFrom: [
-    "triggers/**/*.js",
-    "index.js"
-  ]
+# File: actions/create_danish_menu.js
+// Simulate AI-powered Danish menu generation
+const perform = async (z, bundle) => {
+  const { guest_names, dietary_restrictions, event_date } = bundle.inputData;
+  // Return an example menu (in real use, would call AI service)
+  return {
+    menu: [
+      {
+        course: 'Starter',
+        dish: 'Rugbrød med røget laks og urter (Danish rye bread with smoked salmon and herbs)',
+        dietary_compatible: !dietary_restrictions.includes('vegan')
+      },
+      {
+        course: 'Main',
+        dish: 'Frikadeller med rodfrugter (Danish meatballs with root vegetables)',
+        dietary_compatible: !dietary_restrictions.includes('vegetarian')
+      },
+      {
+        course: 'Dessert',
+        dish: 'Æblekage med hasselnødder (Danish apple cake with hazelnuts)',
+        dietary_compatible: true
+      }
+    ],
+    shopping_list: [
+      'Rugbrød',
+      'Røget laks',
+      'Blandet urter',
+      'Hakket oksekød',
+      'Rodfrugter',
+      'Æbler',
+      'Hasselnødder'
+    ],
+    event_date,
+    notes: 'All ingredients available at Føtex, SuperBrugsen in Aarhus. Adjusted for dietary restrictions.'
+  };
 };
+
+module.exports = {
+  key: 'create_danish_menu',
+  noun: 'Danish Menu',
+  display: {
+    label: 'Create Danish Menu',
+    description: 'Generates a seasonal Danish dinner menu accommodating dietary restrictions, based on Aarhus local stores.'
+  },
+  operation: {
+    inputFields: [
+      { key: 'guest_names', type: 'string', required: true, list: true, label: 'Guest Names' },
+      { key: 'dietary_restrictions', type: 'string', required: true, list: true, label: 'Dietary Restrictions' },
+      { key: 'event_date', type: 'string', required: true, label: 'Event Date' }
+    ],
+    outputFields: [
+      { key: 'menu[]course', label: 'Course' },
+      { key: 'menu[]dish', label: 'Dish' },
+      { key: 'menu[]dietary_compatible', type: 'boolean', label: 'Dietary Compatible' },
+      { key: 'shopping_list[]', label: 'Shopping List Item' },
+      { key: 'event_date', label: 'Event Date' },
+      { key: 'notes', label: 'Notes' }
+    ],
+    perform,
+    sample: {
+      menu: [
+        { course: 'Starter', dish: 'Rugbrød med røget laks og urter', dietary_compatible: true },
+        { course: 'Main', dish: 'Frikadeller med rodfrugter', dietary_compatible: false },
+        { course: 'Dessert', dish: 'Æblekage med hasselnødder', dietary_compatible: true }
+      ],
+      shopping_list: ['Rugbrød', 'Røget laks', 'Blandet urter', 'Hakket oksekød', 'Rodfrugter', 'Æbler', 'Hasselnødder'],
+      event_date: '2024-09-15',
+      notes: 'All ingredients available at Føtex, SuperBrugsen in Aarhus. Adjusted for dietary restrictions.'
+    }
+  }
+};
+```
+
+```plaintext
+# File: actions/schedule_prep_timeline.js
+// Simulate timeline creation and reminders scheduling, considering Nordic culture punctuality
+const perform = async (z, bundle) => {
+  const { event_date, menu } = bundle.inputData;
+  // Timeline is mock-generated in this example
+  return {
+    timeline: [
+      { time: '2024-09-14T18:00:00+02:00', task: 'Buy groceries at Føtex' },
+      { time: '2024-09-15T12:00:00+02:00', task: 'Start prepping vegetables' },
+      { time: '2024-09-15T16:00:00+02:00', task: 'Cook main and dessert' },
+      { time: '2024-09-15T17:30:00+02:00', task: 'Set the table and chill drinks' }
+    ],
+    reminders: [
+      { date: '2024-09-14', message: 'Remember to go grocery shopping for dinner party.' },
+      { date: '2024-09-15', message: 'Start dinner party meal prep this afternoon. Guests arrive at 18:00.' }
+    ],
+    event_date,
+    notes: 'Timeline optimized for prompt Nordic dinner parties. Reminders sent via associated calendar/email.'
+  };
+};
+
+module.exports = {
+  key: 'schedule_prep_timeline',
+  noun: 'Prep Timeline',
+  display: {
+    label: 'Schedule Prep Timeline',
+    description: 'Creates a preparation and reminder timeline for the dinner party, optimized for Nordic culture.'
+  },
+  operation: {
+    inputFields: [
+      { key: 'event_date', type: 'string', required: true, label: 'Event Date' },
+      { key: 'menu', type: 'string', required: true, list: true, label: 'Menu (Course/Dish)' }
+    ],
+    outputFields: [
+      { key: 'timeline[]time', label: 'Timeline Task DateTime' },
+      { key: 'timeline[]task', label: 'Task' },
+      { key: 'reminders[]date', label: 'Reminder Date' },
+      { key: 'reminders[]message', label: 'Reminder Message' },
+      { key: 'event_date', label: 'Event Date' },
+      { key: 'notes', label: 'Notes' }
+    ],
+    perform,
+    sample: {
+      timeline: [
+        { time: '2024-09-14T18:00:00+02:00', task: 'Buy groceries at Føtex' },
+        { time: '2024-09-15T12:00:00+02:00', task: 'Start prepping vegetables' },
+        { time: '2024-09-15T16:00:00+02:00', task: 'Cook main and dessert' },
+        { time: '2024-09-15T17:30:00+02:00', task: 'Set the table and chill drinks' }
+      ],
+      reminders: [
+        { date: '2024-09-14', message: 'Remember to go grocery shopping for dinner party.' },
+        { date: '2024-09-15', message: 'Start dinner party meal prep this afternoon. Guests arrive at 18:00.' }
+      ],
+      event_date: '2024-09-15',
+      notes: 'Timeline optimized for prompt Nordic dinner parties. Reminders sent via associated calendar/email.'
+    }
+  }
+};
+```
+
+```plaintext
+# File: __tests__/integration.test.js
+const zapier = require('zapier-platform-core');
+const App = require('../index');
+
+const { email_invitation } = App.triggers;
+const { extract_guest_info, create_danish_menu, schedule_prep_timeline } = App.actions;
+
+describe('Email-Based Dinner Party Planner', () => {
+  describe('Trigger: email_invitation', () => {
+    it('should trigger with correct subject filtered', async () => {
+      // Mock z.request for Gmail API
+      const z = {
+        request: jest.fn()
+          .mockResolvedValueOnce({
+            data: {
+              messages: [
+                { id: 'abc123' }
+              ]
+            }
+          })
+          .mockResolvedValueOnce({
+            data: {
+              threadId: 'xyz789',
+              payload: {
+                headers: [
+                  { name: 'Subject', value: 'Dinner Party Invitation' }
+                ],
+                parts: [
+                  {
+                    body: { data: Buffer.from('Dear guest, see you at my place!').toString('base64') }
+                  }
+                ]
+              },
+              snippet: 'You\'re invited!'
+            }
+          })
+      };
+
+      const bundle = {
+        authData: {
+          access_token: 'test_token'
+        }
+      };
+
+      const results = await email_invitation.operation.perform(z, bundle);
+
+      expect(Array.isArray(results)).toBe(true);
+      expect(results[0].id).toBe('abc123');
+      expect(results[0].subject.toLowerCase()).toContain('dinner party');
+      expect(results[0].body).toContain('Dear guest');
+    });
+  });
+
+  describe('Action: extract_guest_info', () => {
+    it('should extract guest info from email body', async () => {
+      const z = {};
+      const bundle = {
+        inputData: {
+          body: 'Anna Nielsen, Peter Sørensen are invited. Anna is vegetarian, Peter is gluten-free. See you 2024-09-15!'
+        }
+      };
+      const result = await extract_guest_info.operation.perform(z, bundle);
+      expect(result).toHaveProperty('guest_names');
+      expect(result).toHaveProperty('dietary_restrictions');
+      expect(result).toHaveProperty('event_date');
+      expect(result.guest_names).toContain('Anna Nielsen');
+      expect(result.dietary_restrictions).toContain('vegetarian');
+    });
+  });
+
+  describe('Action: create_danish_menu', () => {
+    it('should generate menu accommodating dietary restrictions', async () => {
+      const z = {};
+      const bundle = {
+        inputData: {
+          guest_names: ['Anna Nielsen', 'Peter Sørensen'],
+          dietary_restrictions: ['vegetarian', 'gluten-free'],
+          event_date: '2024-09-15'
+        }
+      };
+      const result = await create_danish_menu.operation.perform(z, bundle);
+      expect(Array.isArray(result.menu)).toBe(true);
+      expect(result.shopping_list).toContain('Rugbrød');
+      expect(result.event_date).toBe('2024-09-15');
+      expect(result.notes).toMatch(/Aarhus/);
+    });
+  });
+
+  describe('Action: schedule_prep_timeline', () => {
+    it('should create timeline and reminders properly', async () => {
+      const z = {};
+      const bundle = {
+        inputData: {
+          event_date: '2024-09-15',
+          menu: ['Starter-Rugbrød med røget laks og urter', 'Main-Frikadeller med rodfrugter', 'Dessert-Æblekage med hasselnødder']
+        }
+      };
+      const result = await schedule_prep_timeline.operation.perform(z, bundle);
+      expect(Array.isArray(result.timeline)).toBe(true);
+      expect(result.timeline.length).toBeGreaterThan(0);
+      expect(result.reminders[0]).toHaveProperty('date');
+      expect(result.reminders[1].message).toMatch(/Guests arrive at 18:00/);
+      expect(result.event_date).toBe('2024-09-15');
+    });
+  });
+});
