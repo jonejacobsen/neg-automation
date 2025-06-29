@@ -1,27 +1,22 @@
+====================================
 {
-  "name": "zapier-hello-world",
+  "name": "dinner-party-planner",
   "version": "1.0.0",
-  "description": "Zapier CLI Hello World smoke test bundle",
+  "description": "Danish dinner party automation with guest management",
   "main": "index.js",
   "scripts": {
     "test": "jest"
   },
-  "keywords": [
-    "zapier",
-    "cli",
-    "hello-world",
-    "smoke-test"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
   "dependencies": {
-    "zapier-platform-core": "^15.5.0"
+    "zapier-platform-core": "^15.4.0",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "jest": "^29.7.0"
-  }
+  },
+  "private": true
 }
 ```
 
 ```plaintext
-#
+====================================
