@@ -1,25 +1,30 @@
 {
-  "name": "zapier-hello-world",
+  "name": "email-dinner-party-planner",
   "version": "1.0.0",
-  "description": "Zapier CLI Hello World smoke test bundle",
+  "description": "Automatically plan dinner parties from email invitations in Aarhus with Gmail, AI Parsing, Menu Generation, and Calendar Scheduling.",
   "main": "index.js",
   "scripts": {
     "test": "jest"
   },
-  "keywords": [
-    "zapier",
-    "cli",
-    "hello-world",
-    "smoke-test"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
   "dependencies": {
-    "zapier-platform-core": "^15.5.0"
+    "zapier-platform-core": "^15.3.1"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
-  }
+    "jest": "^29.5.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "zapier",
+    "gmail",
+    "dinner",
+    "party",
+    "calendar",
+    "AI"
+  ],
+  "author": "Zapier Expert",
+  "license": "MIT"
 }
 ```
 
